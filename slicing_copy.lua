@@ -124,9 +124,9 @@ local function cut(shift, endpos)
     cmds:arg("-c:a", o.acodec)
     cmds:arg("-c:s", "copy")
     if (o.select_all_streams) then
-        cmds:arg("-map", "v")
-        cmds:arg("-map", "a")
-        cmds:arg("-map", "s")
+        cmds:arg("-map", "v?")
+        cmds:arg("-map", "a?")
+        cmds:arg("-map", "s?")
     else
         cmds:arg("-map", string.format("v:%s?", mp.get_property_number("current-tracks/video/id", 0) - 1))
         cmds:arg("-map", string.format("a:%s?", mp.get_property_number("current-tracks/audio/id", 0) - 1))
