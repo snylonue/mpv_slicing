@@ -130,10 +130,7 @@ local function cut(shift, endpos)
     cmds:arg("-async", "1")
     cmds:arg(outpath)
     msg.info("Run commands: " .. cmds:as_str())
-    local screenx, screeny, aspect = mp.get_osd_size()
-    mp.set_osd_ass(screenx, screeny, "{\\an9}● ")
     local res, err = cmds:run()
-    mp.set_osd_ass(screenx, screeny, "")
     if err then
         msg.error(utils.to_string(err))
         mp.osd_message("Failed. Refer console for details.")
@@ -149,9 +146,6 @@ local function cut(shift, endpos)
             msg.info("stdout: " .. (res.stdout:gsub("^%s*(.-)%s*$", "%1"))) -- trim stdout
         end
         msg.info("Trim file successfully created: " .. outpath)
-        mp.add_timeout(1, function()
-            mp.osd_message("Trim file successfully created!")
-        end)
     end
 end
 
