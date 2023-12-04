@@ -1,26 +1,41 @@
+# mpv-slicing-copy
+
 `slicing-copy.lua` is a Lua script forked from [Kagami/mpv_slicing](https://github.com/Kagami/mpv_slicing).
 The script is for mpv to cut fragments of the video.
 
-#### Usage
+## Installation
 
-Make sure you have FFmpeg installed. Put `slicing_copy.lua` to `~/.config/mpv/scripts/` or `~/.mpv/scripts/` directory to autoload the script or load it manually with `--script=<path>`.
+### Dependency
 
-Press `c` first time to mark the start of the fragment. Press it again to mark the end of the fragment and write it to the disk. Press `C` to clear the fragment. Press `a` to toggle audio capturing (default on).
+- a new enough mpv
+- [ffmpeg](https://ffmpeg.org/)
 
-Logs can be found in console (press `~` to open and `esc` to close by default), which might contains something useful.
+After all dependencies installed, download `slicing_copy.lua` in the repository.
+Then either put `slicing_copy.lua` in in `~~/scripts`, where `~~` refers to [mpv's configuration directory](https://mpv.io/manual/master/#files) or use option `--script=/path/to/slicing_copy.lua` to load it.
 
-You could change key bindings and all parameters of the output video by editing your `input.conf` and `script-opts/slicing_copy.conf`, see [slicing_copy.lua](slicing_copy.lua) and [mpv manual](https://mpv.io/manual/master/#lua-scripting-on-update]]\)) for details.
+## Usage
 
-#### Limitation
+Press `c` to mark the start of the fragment you want to slice. Press it again to mark the end of the fragment and write it to the disk.
 
-If `--merge-files` is passed to mpv, the script won't work.
+Press `C` to clear the fragment.
 
-The script will pass `-referer` and `-user_agent` to ffmpeg to support some online videos (since commit [`f9248e4`](https://github.com/snylonue/mpv_slicing_copy/commit/f9248e452d4f50e13152169c7417cb6003e6925d)), but filenames could be unfriendly.
+Press `a` to toggle audio capturing (default on).
 
-Output videos will be placed in `cutfragments` in mpv configuration directory by default instead of the home directory since commit [`7b3ef36`](https://github.com/snylonue/mpv_slicing_copy/commit/7b3ef36fbe854f238e296a8b16af25bc281142c9).  
-Before [`f4a46ab`](https://github.com/snylonue/mpv_slicing_copy/commit/f4a46abafacc0e0d110c4c04ab8d2710eb6afbc4), neither the script nor ffmpeg will check or create the directory. After it, the directory would be checked (though not created) and a warning message would be printed in console if something went wrong. You could always change the directory by editing option `target_dir` in `script-opts/slicing_copy.conf` or [source code](slicing_copy.lua).
+Output videos will be placed in `cutfragments` in mpv configuration directory by default. The directory will be created if it does not exist. You can change the directory by editing option `target_dir` in `script-opts/slicing_copy.conf`.
 
-#### License
+You can change the keybinds by editing [`input.conf`](https://mpv.io/manual/master/#input-conf)
+
+You can configure how the script works by editing `script-opts/slicing_copy.conf`
+
+Logs can be found in console (press `~` to open and `esc` to close by default), which might contains something useful when something went wrong.
+
+## Limitation
+
+Because ffmpeg does not support `edl://` protocal, the script won't work if `--merge-file` is used or `ytdl` passed such url (so currently it does not work with youtube videos. see #10).
+
+When cutting online videos, `-referer` and `-user_agent`  will be passed to ffmpeg. In such case, the resulting filename tends to be wired.
+
+## License
 
 mpv_slicing_copy - Cut video fragments with mpv
 
