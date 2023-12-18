@@ -2,10 +2,17 @@ local msg = require "mp.msg"
 local utils = require "mp.utils"
 local options = require "mp.options"
 
+local STREAM_SELECTION_OPTIONS = { "current", "all" }
+
 local cut_pos = nil
 local copy_audio = true
 local ext_map = {
     ["mpegts"] = "ts",
+}
+local stream_map = {
+    ["video"] = STREAM_SELECTION_OPTIONS[1],
+    ["audio"] = STREAM_SELECTION_OPTIONS[1],
+    ["sub"] = STREAM_SELECTION_OPTIONS[1],
 }
 local o = {
     ffmpeg_path = "ffmpeg",
@@ -13,6 +20,9 @@ local o = {
     overwrite = false, -- whether to overwrite exist files
     vcodec = "copy",
     acodec = "copy",
+    video_stream_selection = STREAM_SELECTION_OPTIONS[1],
+    audio_stream_selection = STREAM_SELECTION_OPTIONS[1],
+    sub_stream_selection = STREAM_SELECTION_OPTIONS[1],
     debug = false,
 }
 
@@ -122,9 +132,13 @@ local function cut(shift, endpos)
     cmds:arg("-c:v", o.vcodec)
     cmds:arg("-c:a", o.acodec)
     cmds:arg("-c:s", "copy")
-    cmds:arg("-map", string.format("v:%s?", mp.get_property_number("current-tracks/video/id", 0) - 1))
-    cmds:arg("-map", string.format("a:%s?", mp.get_property_number("current-tracks/audio/id", 0) - 1))
-    cmds:arg("-map", string.format("s:%s?", mp.get_property_number("current-tracks/sub/id", 0) - 1))
+    for _, stream in ipairs({ "video", "audio", "sub" }) do
+        if stream_map[stream] == "current" then
+            cmds:arg("-map", string.format("%s:%s?", stream:sub(1, 1), mp.get_property_number(string.format("current-tracks/%s/id", stream), 0) - 1))
+        elseif stream_map[stream] == "all" then
+            cmds:arg("-map", string.format("%s?", stream:sub(1, 1)))
+        end
+    end
     cmds:arg(not copy_audio and "-an" or nil)
     cmds:arg("-avoid_negative_ts", "make_zero")
     cmds:arg("-async", "1")
@@ -183,6 +197,20 @@ local function clear_toggle_mark()
     info("Cleared cut fragment")
 end
 
+local function next_selection_option(cur)
+    for i, v in ipairs(STREAM_SELECTION_OPTIONS) do
+        if v == cur then
+            return STREAM_SELECTION_OPTIONS[i % #STREAM_SELECTION_OPTIONS + 1]
+        end
+    end
+end
+
+local function toggle_stream_selection(stream)
+    return function()
+        stream_map[stream] = next_selection_option(stream_map[stream])
+    end
+end
+
 o.target_dir = o.target_dir:gsub('"', "")
 local file, _ = utils.file_info(mp.command_native({ "expand-path", o.target_dir }))
 if not file then
@@ -203,6 +231,14 @@ elseif not file.is_dir then
 end
 o.target_dir = mp.command_native({ "expand-path", o.target_dir })
 
+stream_map["video"] = o.video_stream_selection
+stream_map["audio"] = o.audio_stream_selection
+stream_map["sub"] = o.sub_stream_selection
+
 mp.add_key_binding("c", "slicing_mark", toggle_mark)
 mp.add_key_binding("a", "slicing_audio", toggle_audio)
 mp.add_key_binding("C", "clear_slicing_mark", clear_toggle_mark)
+
+mp.add_key_binding(nil, "toggle_video_stream_selection", toggle_stream_selection("video"))
+mp.add_key_binding(nil, "toggle_audio_stream_selection", toggle_stream_selection("audio"))
+mp.add_key_binding(nil, "toggle_sub_stream_selection", toggle_stream_selection("sub"))
